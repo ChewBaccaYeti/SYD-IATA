@@ -83,7 +83,7 @@ process.once('SIGINT', killSignal);
 
 function dataFlights() {
     const body_size = 10;
-    const page_size = 10;
+    const page_size = 100;
     const retries = 5;
 
     let syd_flights = [];
@@ -107,7 +107,7 @@ function dataFlights() {
                                 flightType: type,
                                 terminalType: term,
                                 date: date,
-                                count: '10',
+                                count: page_size,
                                 startFrom: '0',
                                 sortColumn: 'scheduled_time',
                                 ascending: 'true',
@@ -221,8 +221,6 @@ function dataFlights() {
                                 } else {
                                     finished = true;
                                 } retry_done(true);
-                                // console.log(flights_array);
-                                // console.log(flights_fields);
                                 console.log(syd_flights);
                                 return syd_flights;
 
