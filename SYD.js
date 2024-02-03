@@ -8,9 +8,9 @@ const port = 11254;
 const base_url = 'https://www.sydneyairport.com.au/_a/flights';
 const headers = { 'accept': 'application/json' };
 const proxy = 'http://speej9xhkw:KbdCbB22xmdmxpG28k@dc.smartproxy.com:10000';
-const frmt = 'YYYY-MM-DD HH:mm'
+const frmt = 'YYYY-MM-DD HH:mm';
 const y_m_d = 'YYYY-MM-DD';
-const h_m = 'HH:mm'
+const h_m = 'HH:mm';
 const tmzn = 'Australia/Sydney';
 const day = moment().tz(tmzn);
 const dates = [day.format(y_m_d), day.clone().add(1, 'd').format(y_m_d)];
@@ -125,40 +125,41 @@ function dataFlights() {
 
                                 const flights_array = _.get(obj, 'flightData', []);
                                 const flights_fields = _.flatMap(flights_array, (flight) => {
+                                    // Проход по всем ключам и значениям объекта
+                                    Object.keys(flight).forEach((key) => {
+                                        // Получаем значение текущего ключа
+                                        let value = flight[key];
+                                        // Проверяем, является ли значение строкой
+                                        if (typeof value === 'string') {
+                                            // Удаляем все символы, кроме цифр, пробелов и букв
+                                            value = value.replace(/[^\d\s\w]/gi, '');
+                                            // Записываем очищенное значение обратно в объект
+                                            flight[key] = value;
+                                        } return flight;
+                                    });
                                     const arrival = type === 'arrival';
                                     const departure = type === 'departure';
-                                    const scheduledDateTime = moment(`${flight.scheduledDate} ${flight.scheduledTime}`).format(frmt);
-                                    const estimatedDateTime = moment(`${flight.estimatedDate} ${flight.estimatedTime}`).format(frmt);
-                                    const regexp_letters_numbers = /^[a-z\d]+$/im;
-                                    const regexp_numbers = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
-                                    const reg_scheduledDateTime = regexp_numbers.test(scheduledDateTime) ? scheduledDateTime : null;
-                                    const reg_estimatedDateTime = regexp_numbers.test(estimatedDateTime) ? estimatedDateTime : null;
-
-                                    const airline_iata = regexp_letters_numbers.test(flight.airlineCode) ? flight.airlineCode.toUpperCase() : null;
-                                    const flight_iata = regexp_letters_numbers.test(flight.flightNumbers[0]) ? flight.flightNumbers[0].toUpperCase() : null;
-                                    const flight_number = regexp_letters_numbers.test(flight.flightNumbers[0].slice(2)) ? flight.flightNumbers[0].slice(2).toUpperCase() : null;
-
-                                    const arr_time = arrival ? reg_scheduledDateTime : null;
-                                    const arr_time_ts = arrival ? moment(reg_scheduledDateTime).tz(tmzn).unix() || null : null;
-                                    const arr_time_utc = arrival ? moment.tz(reg_scheduledDateTime, tmzn).utc().format(frmt) : null;
-                                    const arr_estimated = arrival ? reg_estimatedDateTime : null;
-                                    const arr_estimated_ts = arrival ? moment(reg_estimatedDateTime).tz(tmzn).unix() || null : null;
-                                    const arr_estimated_utc = arrival ? moment.tz(reg_estimatedDateTime, tmzn).utc().format(frmt) : null;
-
-                                    const dep_time = departure ? reg_scheduledDateTime : null;
-                                    const dep_time_ts = departure ? moment(reg_scheduledDateTime).tz(tmzn).unix() || null : null;
-                                    const dep_time_utc = departure ? moment.tz(reg_scheduledDateTime, tmzn).utc().format(frmt) : null;
-                                    const dep_estimated = departure ? reg_estimatedDateTime : null;
-                                    const dep_estimated_ts = departure ? moment(reg_estimatedDateTime).tz(tmzn).unix() : null;
-                                    const dep_estimated_utc = departure ? moment.tz(reg_estimatedDateTime, tmzn).utc().format(frmt) : null;
+                                    const scheduledDate = flight.scheduledDate === '-' ? null : flight.scheduledDate;
+                                    const scheduledTime = flight.scheduledTime === '-' ? null : flight.scheduledTime;
+                                    const estimatedDate = flight.estimatedDate === '-' ? null : flight.estimatedDate;
+                                    const estimatedTime = flight.estimatedTime === '-' ? null : flight.estimatedTime;
+                                    const delayed = (Math.abs(moment(scheduledTime, h_m).diff(moment(estimatedTime, h_m), 'minutes')) || null);
+                                    const scheduledDateTime = moment(`${scheduledDate} ${scheduledTime}`, frmt).format(frmt);
+                                    const estimatedDateTime = moment(`${estimatedDate} ${estimatedTime}`, frmt).format(frmt);
+                                    const regExp_letters_numbers = /^[A-Z\d]+$/im;
+                                    const regExp_numbers = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/m;
+                                    const reg_scheduledDateTime = regExp_numbers.test(scheduledDateTime) ? scheduledDateTime : null;
+                                    const reg_estimatedDateTime = regExp_numbers.test(estimatedDateTime) ? estimatedDateTime : null;
+                                    const airline_iata = regExp_letters_numbers.test(flight.airlineCode) ? flight.airlineCode : null;
+                                    const flight_iata = regExp_letters_numbers.test(flight.flightNumbers[0]) ? flight.flightNumbers[0] : null;
+                                    const flight_number = regExp_letters_numbers.test(flight.flightNumbers[0].slice(2)) ? flight.flightNumbers[0].slice(2) : null;
 
                                     const info_fields = {
                                         'airline_iata': arrival ? airline_iata : departure ? airline_iata : null,
                                         'flight_iata': arrival ? flight_iata : departure ? flight_iata : null,
                                         'flight_number': arrival ? flight_number : departure ? flight_number : null,
                                         'status': flight.status.toLowerCase(),
-                                        'delayed': arrival ? (Math.abs(moment(flight.scheduledTime, h_m).diff(moment(flight.estimatedTime, h_m), 'minutes')) || null) : null ||
-                                            departure ? (Math.abs(moment(flight.scheduledTime, h_m).diff(moment(flight.estimatedTime, h_m), 'minutes')) || null) : null,
+                                        'delayed': arrival ? delayed : null || departure ? delayed : null,
                                     };
                                     const flight_numbers = {
                                         'cs_airline_iata': null,
@@ -166,20 +167,20 @@ function dataFlights() {
                                         'cs_flight_number': null,
                                     };
                                     const arrival_fields = {
-                                        'arr_time': arr_time,
-                                        'arr_time_ts': arr_time_ts,
-                                        'arr_time_utc': arr_time_utc,
-                                        'arr_estimated': arr_estimated,
-                                        'arr_estimated_ts': arr_estimated_ts,
-                                        'arr_estimated_utc': arr_estimated_utc,
+                                        'arr_time': arrival ? reg_scheduledDateTime : null,
+                                        'arr_time_ts': arrival ? moment(reg_scheduledDateTime).tz(tmzn).unix() || null : null,
+                                        'arr_time_utc': arrival ? moment.tz(reg_scheduledDateTime, tmzn).utc().format(frmt) : null,
+                                        'arr_estimated': arrival ? reg_estimatedDateTime : null,
+                                        'arr_estimated_ts': arrival ? moment(reg_estimatedDateTime).tz(tmzn).unix() || null : null,
+                                        'arr_estimated_utc': arrival && reg_estimatedDateTime ? moment.tz(reg_estimatedDateTime, tmzn).utc().format(frmt) : null,
                                     };
                                     const departure_fields = {
-                                        'dep_time': dep_time,
-                                        'dep_time_ts': dep_time_ts,
-                                        'dep_time_utc': dep_time_utc,
-                                        'dep_estimated': dep_estimated,
-                                        'dep_estimated_ts': dep_estimated_ts,
-                                        'dep_estimated_utc': dep_estimated_utc,
+                                        'dep_time': departure ? reg_scheduledDateTime : null,
+                                        'dep_time_ts': departure ? moment(reg_scheduledDateTime).tz(tmzn).unix() || null : null,
+                                        'dep_time_utc': departure ? moment.tz(reg_scheduledDateTime, tmzn).utc().format(frmt) : null,
+                                        'dep_estimated': departure ? reg_estimatedDateTime : null,
+                                        'dep_estimated_ts': departure ? moment(reg_estimatedDateTime).tz(tmzn).unix() : null,
+                                        'dep_estimated_utc': departure && reg_estimatedDateTime ? moment.tz(reg_estimatedDateTime, tmzn).utc().format(frmt) : null,
                                     };
                                     const spread_fields = {
                                         ...info_fields,
@@ -187,22 +188,22 @@ function dataFlights() {
                                         ...arrival_fields,
                                         ...departure_fields,
                                     };
+                                    const obj_flight = spread_fields;
+                                    // Добавление рейсов в массив
                                     if (arrival ? flight : departure ? flight : null) {
-                                        // Добавляем родительский рейс
-                                        syd_flights.push(spread_fields);
-                                        // Проверяем наличие номеров рейсов и итерируемся по ним
+                                        syd_flights.push(obj_flight);
+                                        // Проверка наличия номеров рейсов и добавление дочерних рейсов
                                         if (flight.flightNumbers && flight.flightNumbers.length > 0) {
                                             flight.flightNumbers.forEach((number, index) => {
                                                 if (index === 0) {
-                                                    // Пропускаем первый номер, так как он уже добавлен как родительский рейс, тоесть возвращаем ничего 
-                                                    return;
+                                                    return; // Пропускаем первый номер, так как он уже добавлен как родительский рейс
                                                 }
                                                 // Добавляем дочерние рейсы
                                                 syd_flights.push({
-                                                    ...spread_fields,
-                                                    'cs_airline_iata': spread_fields.airline_iata,
-                                                    'cs_flight_number': spread_fields.flight_number,
-                                                    'cs_flight_iata': spread_fields.flight_iata,
+                                                    ...obj_flight,
+                                                    'cs_airline_iata': obj_flight.airline_iata,
+                                                    'cs_flight_number': obj_flight.flight_number,
+                                                    'cs_flight_iata': obj_flight.flight_iata,
                                                     'airline_iata': arrival ? number.slice(0, 2) : departure ? number.slice(0, 2) : null,
                                                     'flight_iata': arrival ? number : departure ? number : null,
                                                     'flight_number': arrival ? number.slice(2, 6) : departure ? number.slice(2, 6) : null,
@@ -210,12 +211,6 @@ function dataFlights() {
                                             });
                                         }
                                     }
-                                    const obj_flight = {};
-                                    const exp = /^[a-z\d]$/im;
-                                    if (exp.test(flight.airlineCode)) {
-                                        obj_flight.airline_iata = String(flight.airlineCode).toUpperCase();
-                                    }
-
                                 });
 
                                 function unique_flights(arr, key) {
