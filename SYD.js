@@ -125,24 +125,29 @@ function dataFlights() {
 
                                 const flights_array = _.get(obj, 'flightData', []);
                                 const flights_fields = _.flatMap(flights_array, (flight) => {
-                                    // Проход по всем ключам и значениям объекта
-                                    Object.keys(flight).forEach((key) => {
-                                        // Получаем значение текущего ключа
-                                        let value = flight[key];
-                                        // Проверяем, является ли значение строкой
-                                        if (typeof value === 'string') {
-                                            // Удаляем все символы, кроме цифр, пробелов и букв
-                                            value = value.replace(/[^\d\s\w]/gi, '');
-                                            // Записываем очищенное значение обратно в объект
-                                            flight[key] = value;
-                                        } return flight;
-                                    });
+
+                                    const regExp_flight = {};
+                                    const exp = /^[a-z\d]$/im;
+                                    if (exp.test(flight.airlineCode) &&
+                                        exp.test(flight.scheduledTime) &&
+                                        exp.test(flight.estimatedTime) &&
+                                        exp.test(flight.status)) {
+                                        regExp_flight.airline_iata = String(flight.airlineCode).toUpperCase();
+                                        regExp_flight.scheduledTime = String(flight.scheduledTime);
+                                        regExp_flight.estimatedTime = String(flight.estimatedTime);
+                                        regExp_flight.status = String(flight.status).toLowerCase();
+                                    } else {
+                                        regExp_flight.airline_iata = null;
+                                        regExp_flight.scheduledTime = null;
+                                        regExp_flight.estimatedTime = null;
+                                        regExp_flight.status = null;
+                                    }
                                     const arrival = type === 'arrival';
                                     const departure = type === 'departure';
-                                    const scheduledDate = flight.scheduledDate === '-' ? null : flight.scheduledDate;
-                                    const scheduledTime = flight.scheduledTime === '-' ? null : flight.scheduledTime;
-                                    const estimatedDate = flight.estimatedDate === '-' ? null : flight.estimatedDate;
-                                    const estimatedTime = flight.estimatedTime === '-' ? null : flight.estimatedTime;
+                                    const scheduledDate = flight.scheduledDate === '-' ? null : flight.scheduledDate === NaN ? null : flight.scheduledDate;
+                                    const scheduledTime = flight.scheduledTime === '-' ? null : flight.scheduledTime === NaN ? null : flight.scheduledTime;
+                                    const estimatedDate = flight.estimatedDate === '-' ? null : flight.estimatedDate === NaN ? null : flight.estimatedDate;
+                                    const estimatedTime = flight.estimatedTime === '-' ? null : flight.estimatedTime === NaN ? null : flight.estimatedTime;
                                     const delayed = (Math.abs(moment(scheduledTime, h_m).diff(moment(estimatedTime, h_m), 'minutes')) || null);
                                     const scheduledDateTime = moment(`${scheduledDate} ${scheduledTime}`, frmt).format(frmt);
                                     const estimatedDateTime = moment(`${estimatedDate} ${estimatedTime}`, frmt).format(frmt);
