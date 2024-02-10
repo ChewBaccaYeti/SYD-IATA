@@ -96,22 +96,21 @@ if (arrival ? flight : departure ? flight : null) {
     }
 }
 
-const obj_flight = {};
+const regExp_flight = {};
 const exp = /^[a-z\d]$/im;
-if (exp.test(flight.airlineCode),
-    exp.test(flight.scheduledTime),
-    exp.test(flight.estimatedTime),
+if (exp.test(flight.airlineCode) &&
+    exp.test(flight.scheduledTime) &&
+    exp.test(flight.scheduledDate) &&
+    exp.test(flight.estimatedTime) &&
+    exp.test(flight.estimatedDate) &&
     exp.test(flight.status)) {
-    obj_flight.airline_iata = String(flight.airlineCode).toUpperCase();
-    obj_flight.scheduledTime = String(flight.scheduledTime).toUpperCase();
-    obj_flight.estimatedTime = String(flight.estimatedTime).toUpperCase();
-    obj_flight.status = String(flight.status).toLowerCase();
+    regExp_flight.airline_iata = String(flight.airlineCode).toUpperCase();
+    regExp_flight.scheduledTime = String(flight.scheduledDate && flight.scheduledTime);
+    regExp_flight.estimatedTime = String(flight.estimatedDate && flight.estimatedTime);
+    regExp_flight.status = String(flight.status).toLowerCase();
 } else {
-    obj_flight.airline_iata = null;
-    obj_flight.scheduledTime = null;
-    obj_flight.estimatedTime = null;
-    obj_flight.status = null;
-}
-const regExp_flight = obj_flight;
-
-console.log(obj_flight)
+    regExp_flight.airline_iata = null;
+    regExp_flight.scheduledTime = null;
+    regExp_flight.estimatedTime = null;
+    regExp_flight.status = null;
+} return regExp_flight;

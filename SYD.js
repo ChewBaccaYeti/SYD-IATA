@@ -125,23 +125,6 @@ function dataFlights() {
 
                                 const flights_array = _.get(obj, 'flightData', []);
                                 const flights_fields = _.flatMap(flights_array, (flight) => {
-
-                                    const regExp_flight = {};
-                                    const exp = /^[a-z\d]$/im;
-                                    if (exp.test(flight.airlineCode) &&
-                                        exp.test(flight.scheduledTime) &&
-                                        exp.test(flight.estimatedTime) &&
-                                        exp.test(flight.status)) {
-                                        regExp_flight.airline_iata = String(flight.airlineCode).toUpperCase();
-                                        regExp_flight.scheduledTime = String(flight.scheduledTime);
-                                        regExp_flight.estimatedTime = String(flight.estimatedTime);
-                                        regExp_flight.status = String(flight.status).toLowerCase();
-                                    } else {
-                                        regExp_flight.airline_iata = null;
-                                        regExp_flight.scheduledTime = null;
-                                        regExp_flight.estimatedTime = null;
-                                        regExp_flight.status = null;
-                                    }
                                     const arrival = type === 'arrival';
                                     const departure = type === 'departure';
                                     const scheduledDate = flight.scheduledDate === '-' ? null : flight.scheduledDate === NaN ? null : flight.scheduledDate;
